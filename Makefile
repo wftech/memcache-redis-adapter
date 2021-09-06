@@ -20,3 +20,6 @@ upgrade-dependencies: build
 
 build:
 	docker build --build-arg=APP_USER=$(APP_USER) -t $(CONTAINER_NAME) .
+
+image:
+	docker build -t $(BIN_NAME):latest -f Dockerfile.image .

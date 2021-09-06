@@ -1,0 +1,12 @@
+FROM golang:1.17-alpine AS build
+ENV GO111MODULE=on
+COPY . /app
+WORKDIR /app
+RUN go build -o memcache-redis-adapter
+
+FROM alpine
+COPY --from=build /app/memcache-redis-adapter /bin/memcache-redis-adapter
+COPY .docker/entrypoint.sh /bin/entrypoint.sh
+RUN chmod +x /bin/entrypoint.sh
+ENTRYPOINT ["/bin/entrypoint.sh"]
+CMD []
