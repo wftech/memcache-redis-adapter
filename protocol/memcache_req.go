@@ -173,9 +173,22 @@ func ReadRequest(r *bufio.Reader) (req *McRequest, err error) {
 		if err != nil {
 			return nil, NewProtocolError("cannot read value " + err.Error())
 		}
+		// TODO - noreply
 		return req, nil
 	case "touch":
 		// touch <key> <exptime> [noreply]\r\n
+		if len(arr) < 2 {
+			return nil, NewProtocolError(fmt.Sprintf("too few params to command %q", arr[0]))
+		}
+		req := &McRequest{}
+		req.Command = arr[0]
+		req.Key = arr[1]
+		req.Exptime, err = strconv.ParseInt(arr[2], 10, 64)
+		if err != nil {
+			return nil, NewProtocolError("cannot read exptime " + err.Error())
+		}
+		// TODO - noreply
+		return req, nil
 	case "version":
 		// version\r\n
 		return &McRequest{Command: arr[0]}, nil

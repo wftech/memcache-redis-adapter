@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"strconv"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/wftech/memcache-redis-adapter/protocol"
 )
@@ -81,7 +83,35 @@ func (p *RedisProxy) Process(req *protocol.McRequest) protocol.McResponse {
 		}
 		return protocol.McResponse{Response: "NOT_FOUND"}
 
-		// todo "touch"...
+	case "touch":
+		r, err := redis.Int(p.conn.Do("EXPIREAT", req.Key, req.Exptime))
+		if err != nil {
+			return serverError(err)
+		}
+		if r > 0 {
+			return protocol.McResponse{Response: "TOUCHED"}
+		}
+		return protocol.McResponse{Response: "NOT_FOUND"}
+
+	case "incr":
+		r, err := redis.Int(p.conn.Do("INCRBY", req.Key, req.Value))
+		if err != nil {
+			return serverError(err)
+		}
+		if r > 0 {
+			return protocol.McResponse{Response: strconv.Itoa(r)}
+		}
+		return protocol.McResponse{Response: "NOT_FOUND"}
+
+	case "decr":
+		r, err := redis.Int(p.conn.Do("DECRBY", req.Key, req.Value))
+		if err != nil {
+			return serverError(err)
+		}
+		if r > 0 {
+			return protocol.McResponse{Response: strconv.Itoa(r)}
+		}
+		return protocol.McResponse{Response: "NOT_FOUND"}
 	}
 
 	return protocol.McResponse{Response: "ERROR"}
