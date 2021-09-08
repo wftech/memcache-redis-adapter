@@ -4,6 +4,8 @@ package protocol
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -77,7 +79,7 @@ func ReadRequest(r *bufio.Reader) (req *McRequest, err error) {
 			req.Noreply = true
 		}
 		req.Data = make([]byte, bytes)
-		req.Data, _, err = r.ReadLine()
+		req.Data, err = ioutil.ReadAll(io.LimitReader(r, int64(bytes)))
 		if err != nil {
 			return nil, NewProtocolError(fmt.Sprintf("Failed to read data block: %s", err.Error()))
 		}
@@ -108,7 +110,7 @@ func ReadRequest(r *bufio.Reader) (req *McRequest, err error) {
 			req.Noreply = true
 		}
 		req.Data = make([]byte, bytes)
-		req.Data, _, err = r.ReadLine()
+		req.Data, err = ioutil.ReadAll(io.LimitReader(r, int64(bytes)))
 		if err != nil {
 			return nil, NewProtocolError(fmt.Sprintf("Failed to read data block: %s", err.Error()))
 		}
