@@ -77,26 +77,12 @@ func ReadRequest(r *bufio.Reader) (req *McRequest, err error) {
 			req.Noreply = true
 		}
 		req.Data = make([]byte, bytes)
-		n, err := r.Read(req.Data)
+		req.Data, _, err = r.ReadLine()
 		if err != nil {
-			return nil, err
+			return nil, NewProtocolError(fmt.Sprintf("Failed to read data block: %s", err.Error()))
 		}
-		if n != bytes {
-			return nil, NewProtocolError(fmt.Sprintf("Read only %d bytes of %d bytes of expected data", n, bytes))
-		}
-		c, err := r.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		if c != '\r' {
-			return nil, NewProtocolError("expected \\r")
-		}
-		c, err = r.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		if c != '\n' {
-			return nil, NewProtocolError("expected \\n")
+		if len(req.Data) != bytes {
+			return nil, NewProtocolError(fmt.Sprintf("Read only %d bytes of %d bytes of expected data", len(req.Data), bytes))
 		}
 		return req, nil
 	case "cas":
@@ -122,26 +108,12 @@ func ReadRequest(r *bufio.Reader) (req *McRequest, err error) {
 			req.Noreply = true
 		}
 		req.Data = make([]byte, bytes)
-		n, err := r.Read(req.Data)
+		req.Data, _, err = r.ReadLine()
 		if err != nil {
-			return nil, err
+			return nil, NewProtocolError(fmt.Sprintf("Failed to read data block: %s", err.Error()))
 		}
-		if n != bytes {
-			return nil, NewProtocolError(fmt.Sprintf("Read only %d bytes of %d bytes of expected data", n, bytes))
-		}
-		c, err := r.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		if c != '\r' {
-			return nil, NewProtocolError("expected \\r")
-		}
-		c, err = r.ReadByte()
-		if err != nil {
-			return nil, err
-		}
-		if c != '\n' {
-			return nil, NewProtocolError("expected \\n")
+		if len(req.Data) != bytes {
+			return nil, NewProtocolError(fmt.Sprintf("Read only %d bytes of %d bytes of expected data", len(req.Data), bytes))
 		}
 		return req, nil
 	case "delete":
