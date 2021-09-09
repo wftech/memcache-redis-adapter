@@ -20,6 +20,7 @@
 - `touch`
 - `incr`
 - `decr`
+- `replace`
 
 ## Credits
 
