@@ -23,14 +23,18 @@ func initRedisPool() *redis.Pool {
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			d, _ := time.ParseDuration("1s")
-			c, err := redis.DialTimeout("tcp", *redisServer, d, d, d)
+			c, err := redis.Dial("tcp", *redisServer)
 			if err != nil {
 				return nil, err
 			}
 			return c, err
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			log.Println("TestOnBorrow called")
+			if time.Since(t) < time.Minute {
+				return nil
+			}
+			log.Println("TestOnBorrow PING")
 			_, err := c.Do("PING")
 			return err
 		},
@@ -38,13 +42,12 @@ func initRedisPool() *redis.Pool {
 	return pool
 }
 
-func handleConnection(c net.Conn) {
+func handleConnection(c net.Conn, pool *redis.Pool) {
 	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
-	
+
 	defer c.Close()
 
 	// take it per need
-	pool := initRedisPool()
 	conn := pool.Get()
 	defer conn.Close()
 
@@ -97,12 +100,14 @@ func main() {
 	defer l.Close()
 	rand.Seed(time.Now().Unix())
 
+	pool := initRedisPool()
+
 	for {
 		c, err := l.Accept()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		go handleConnection(c)
+		go handleConnection(c, pool)
 	}
 }
