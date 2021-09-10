@@ -30,12 +30,10 @@ func initRedisPool() *redis.Pool {
 			return c, err
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			log.Println("TestOnBorrow called")
-			if time.Since(t) < time.Minute {
-				return nil
-			}
-			log.Println("TestOnBorrow PING")
 			_, err := c.Do("PING")
+			if err != nil {
+				log.Println(fmt.Sprintf("TestOnBorrow PING error: %s", err.Error()))
+			}
 			return err
 		},
 	}
