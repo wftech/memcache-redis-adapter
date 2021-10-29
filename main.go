@@ -17,6 +17,7 @@ import (
 
 var redisServer = flag.String("server", "127.0.0.1:6379", "Redis server to connect to")
 var listenAddress = flag.String("bind", "0.0.0.0:11211", "Bind address and port")
+var verbose = flag.Bool("verbose", false, "Show more debug output")
 
 func initRedisPool() *redis.Pool {
 	pool := &redis.Pool{
@@ -30,11 +31,18 @@ func initRedisPool() *redis.Pool {
 			return c, err
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			log.Println("TestOnBorrow called")
+			if *verbose {
+				log.Println("TestOnBorrow called")
+			}
+
 			if time.Since(t) < time.Minute {
 				return nil
 			}
-			log.Println("TestOnBorrow PING")
+
+			if *verbose {
+				log.Println("TestOnBorrow PING")
+			}
+
 			_, err := c.Do("PING")
 			return err
 		},
@@ -43,7 +51,9 @@ func initRedisPool() *redis.Pool {
 }
 
 func handleConnection(c net.Conn, pool *redis.Pool) {
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+	if *verbose {
+		fmt.Printf("Serving %s\n", c.RemoteAddr().String())
+	}
 
 	defer c.Close()
 
@@ -69,7 +79,10 @@ func handleConnection(c net.Conn, pool *redis.Pool) {
 			log.Printf("%v ReadRequest err: %v", c, err)
 			return
 		}
-		log.Printf("%v Req: %+v\n", c, req)
+
+		if *verbose {
+			log.Printf("%v Req: %+v\n", c, req)
+		}
 
 		switch req.Command {
 		case "quit":
@@ -81,7 +94,10 @@ func handleConnection(c net.Conn, pool *redis.Pool) {
 		default:
 			res := proxy.Process(req)
 			if !req.Noreply {
-				log.Printf("%v Res: %+v\n", c, res)
+				if *verbose {
+					log.Printf("%v Res: %+v\n", c, res)
+				}
+
 				bw.WriteString(res.Protocol())
 				bw.Flush()
 			}
