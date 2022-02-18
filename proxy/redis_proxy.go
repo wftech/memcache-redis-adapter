@@ -70,6 +70,10 @@ func (p *RedisProxy) Process(req *protocol.McRequest) protocol.McResponse {
 			if err != nil {
 				return serverError(err)
 			}
+			_, err = p.conn.Do("EXPIREAT", req.Key+"_mcflags", req.Exptime)
+			if err != nil {
+				return serverError(err)
+			}
 		}
 
 		return protocol.McResponse{Response: "STORED"}
@@ -145,6 +149,10 @@ func (p *RedisProxy) Process(req *protocol.McRequest) protocol.McResponse {
 
 		if req.Exptime != 0 {
 			_, err = p.conn.Do("EXPIREAT", req.Key, req.Exptime)
+			if err != nil {
+				return serverError(err)
+			}
+			_, err = p.conn.Do("EXPIREAT", req.Key+"_mcflags", req.Exptime)
 			if err != nil {
 				return serverError(err)
 			}
